@@ -48,20 +48,24 @@ public class CampRestController {
 		if (mno == null) {
 			return new ResponseEntity<String>("erro", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		
 		dto.setMno(mno);
 		campService.register(TableType.CAMP, dto);
 
 		return new ResponseEntity<String>(dto.getName(), HttpStatus.OK);
 	}
 	
-	@GetMapping(value = "list/{type}/{locations}/{page}")
-	public ResponseEntity<List<Object>> getListByCamp(@PathVariable("page") int page, @PathVariable("type") String[] type,
+	@GetMapping(value = "list/{type}/{locations}/{page}/{size}")
+	public ResponseEntity<List<Object>> getListByCamp(@PathVariable("page") int page,@PathVariable("size") int size,  @PathVariable("type") String[] type,
 			@PathVariable("locations") String[] locations, @AuthenticationPrincipal PrincipalDetails principalDetails) {
 		List<CampDTO> campdtoList = new ArrayList<>();
 		List<Double> avg = new ArrayList<>();
 		
 		PageRequestDTO dto = new PageRequestDTO();
 		dto.setPage(page);
+		dto.setSize(size);
+		
+		log.info(dto);
 			
 		 PageResultDTO<CampDTO, Object[]> boardDTO = campService.findManayDataOfCamp(dto, type, locations);
 
@@ -173,6 +177,24 @@ public class CampRestController {
 		log.info(crno);
 		campService.remove(TableType.CAMPREVIEW, crno);
 
+		return new ResponseEntity<Long>(HttpStatus.OK);
+	}
+	
+	// 예약 내역 확인
+	@GetMapping("/reservation/member")
+	public ResponseEntity<List<Object>> findMemberData(@AuthenticationPrincipal PrincipalDetails details){
+		String name = details.getMember().getNickname();
+		log.info(name);
+		
+		List<Object> value =  campService.findReservationDataofMember(name);
+		log.info("컨트롤러 보내기 전 정상");
+		return new ResponseEntity<List<Object>>(value, HttpStatus.OK);		
+	}
+	
+	@GetMapping("/calendar/remove/{ccno}")
+	public ResponseEntity<Long> calendarRemove(@PathVariable("ccno") Long ccno){
+		campService.remove(TableType.CAMPCALENDER, ccno);
+			
 		return new ResponseEntity<Long>(HttpStatus.OK);
 	}
 
